@@ -2,7 +2,7 @@
 
 A single-file web app for scoring and prioritizing a biotech / diagnostics project portfolio.
 
-**Run it:** download `bioportfolio.html` and open it in any modern browser. There's no install and no server.
+**Run it:** use the live version at https://morganisms.github.io/bioportfolio/, or download `index.html` and open it in any modern browser. There's no install and no server.
 
 ## Features
 
