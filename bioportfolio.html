@@ -1,0 +1,741 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BioPortfolio</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --navy:#17304b; --teal:#2a8c82; --teal-lt:#7fd1c4; --bg:#f2f6f7; --card:#fff;
+  --ink:#1c2b3a; --muted:#5d6b78; --line:#e1e7ec; --head:#eef2f5;
+  --hi:#1f7a52; --hi-bg:#e3f4ea; --md:#8a6a12; --md-bg:#fbf1d6; --lo:#9a3b3b; --lo-bg:#f8e3e3;
+  --mand:#3b4a7a; --mand-bg:#e6e9f2;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+
+/* Header & nav */
+header{background:var(--navy);color:#fff;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.brand{font-size:26px;font-weight:700}.brand span{color:var(--teal-lt)}
+.sub{font-size:15px;opacity:.85;margin-top:2px}
+.tag{font-size:18px;color:#fff;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.4)}
+.tag:hover{color:var(--teal-lt);border-bottom-color:var(--teal-lt)}
+nav{background:#fff;border-bottom:1px solid var(--line);padding:0 20px;display:flex;gap:6px;overflow-x:auto}
+nav button{background:none;border:0;padding:16px 22px;font:600 16px/1.2 inherit;font-family:inherit;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+nav button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--teal)}
+
+/* Layout & type */
+main{max-width:1700px;margin:0 auto;padding:36px 24px 60px}
+h1{font-size:34px;margin:0 0 8px}
+h2{font-size:22px;margin:0 0 14px}
+.lead{color:var(--muted);font-size:18px;margin:0 0 28px}
+.hint{font-weight:400;color:var(--muted);font-size:13px;margin-top:4px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px}
+.section{margin-top:22px}
+.row{display:flex;gap:14px;flex-wrap:wrap;align-items:end}
+.row>div{flex:1;min-width:180px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.warn{color:var(--lo)}.ok{color:var(--hi)}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:18px;margin-bottom:26px}
+.stat .lbl{font-size:14px;letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
+.stat .val{font-size:38px;font-weight:700;margin-top:10px}
+
+/* Buttons & forms */
+.btns{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:24px}
+.btn{border:1px solid var(--line);background:#fff;color:var(--ink);padding:11px 16px;border-radius:7px;font:600 15px/1.2 inherit;font-family:inherit;cursor:pointer}
+.btn:hover{border-color:#b9c5cf}
+.btn.primary{background:var(--navy);color:#fff;border-color:var(--navy)}
+.btn.danger{color:var(--lo)}
+.btn.sm{padding:6px 10px;font-size:13px}
+label{display:block;font-size:14px;font-weight:600;margin-bottom:6px}
+input,select,textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:7px;font:15px/1.35 inherit;font-family:inherit;background:#fff;color:var(--ink)}
+textarea{resize:vertical;min-height:44px}
+input:focus,select:focus,textarea:focus,button:focus-visible,th:focus-visible{outline:2px solid var(--teal-lt);outline-offset:1px}
+input:disabled{background:#f1f3f5;color:#9aa5af}
+.chk{display:flex;gap:8px;align-items:center;font-weight:600;font-size:15px}.chk input{width:auto;margin:0}
+.crit-desc{font-size:12.5px;color:var(--muted);font-weight:400;margin:2px 0 6px}
+.filter{display:flex;align-items:center;gap:8px;margin-left:auto}
+.filter label{margin:0;white-space:nowrap}.filter select{width:auto;padding:9px 10px}
+
+/* Tables */
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{background:var(--head);text-align:left;font-size:13px;text-transform:uppercase;color:#3b4a58;padding:14px;white-space:nowrap}
+th[data-k]{cursor:pointer;user-select:none}
+th:first-child{border-radius:8px 0 0 8px}th:last-child{border-radius:0 8px 8px 0}
+td{padding:14px;border-bottom:1px solid var(--line);font-size:15px;vertical-align:middle}
+tr:last-child td{border-bottom:0}
+td.rank{font-weight:700;color:var(--teal);width:56px}
+.empty{color:var(--muted);text-align:center;padding:30px}
+.pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:13px;font-weight:700}
+.p-High{background:var(--hi-bg);color:var(--hi)}.p-Medium{background:var(--md-bg);color:var(--md)}.p-Low{background:var(--lo-bg);color:var(--lo)}
+.p-Mandatory{background:var(--mand-bg);color:var(--mand)}
+.badge{font-size:11px;font-weight:700;color:var(--teal);background:#e3f2ef;padding:2px 8px;border-radius:10px;margin-left:6px;vertical-align:2px}
+.note{cursor:help;color:var(--teal);font-weight:700;margin-left:4px}
+
+/* Matrix */
+#matrix{position:relative;height:720px}
+.plot{position:absolute;left:110px;right:40px;top:30px;bottom:70px;border-left:2px solid #8695a3;border-bottom:2px solid #8695a3}
+.vmid{position:absolute;top:0;bottom:0;left:50%;width:2px;background:var(--line)}
+.hmid{position:absolute;left:0;right:0;top:50%;height:2px;background:var(--line)}
+.q{position:absolute;font-size:13px;font-weight:600;color:#7a8794}
+.dot{position:absolute;width:18px;height:18px;margin:-9px 0 0 -9px;padding:0;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.25);cursor:pointer}
+.dot.mand{border-radius:3px;transform:rotate(45deg)}
+.dlbl{position:absolute;font-size:12px;font-weight:600;transform:translate(12px,-50%);white-space:nowrap;color:var(--ink);pointer-events:none;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff}
+.dlbl.left{transform:translate(calc(-100% - 12px),-50%)}
+.tip{position:absolute;background:var(--navy);color:#fff;padding:10px 12px;border-radius:7px;font-size:13px;pointer-events:none;z-index:5;display:none;max-width:300px;line-height:1.45}
+.axl{position:absolute;font-size:14px;font-weight:700;color:#4a5866}
+.ytick,.xtick{position:absolute;font-size:12px;color:#8695a3}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:6px;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.legend i.mand{border-radius:2px;transform:rotate(45deg)}
+
+/* Admin */
+.crit{border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px}
+.crit .top{display:grid;grid-template-columns:36px 1.3fr .7fr 2fr 110px;gap:10px;align-items:start}
+.crit .anch{display:grid;grid-template-columns:36px 1fr 1fr 1fr;gap:10px;margin-top:12px}
+.crit .num{font-weight:700;color:var(--teal);font-size:18px;padding-top:30px}
+.crit label{font-size:12px;color:var(--muted);white-space:nowrap}
+.totalbar{display:flex;justify-content:flex-end;gap:10px;align-items:center;padding-top:10px;font-weight:600}
+.callout{background:#e9f3f1;border-left:4px solid var(--teal);padding:14px 18px;border-radius:6px;margin-top:18px;color:#2d4a47}
+
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:12px 20px;border-radius:8px;font-size:15px;display:none;z-index:20;max-width:calc(100% - 32px)}
+
+@media (max-width:900px){
+  main{padding:24px 16px 48px}
+  .stats{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}
+  .crit .top,.crit .anch{grid-template-columns:1fr}.crit .num{padding-top:0}
+  #matrix{height:520px}.plot{left:60px;right:16px}
+  .filter{margin-left:0}
+}
+</style>
+</head>
+<body>
+<header>
+  <div><div class="brand">Bio<span>Portfolio</span></div><div class="sub">Biotech Portfolio Prioritization Tool</div></div>
+  <a class="tag" href="https://github.com/morganisms/bioportfolio" target="_blank" rel="noopener">morganisms: bioportfolio</a>
+</header>
+<nav id="nav" role="tablist">
+  <button role="tab" data-v="portfolio" aria-selected="true">Portfolio</button>
+  <button role="tab" data-v="matrix" aria-selected="false">Prioritization Matrix</button>
+  <button role="tab" data-v="add" aria-selected="false">Add Project</button>
+  <button role="tab" data-v="admin" aria-selected="false">Admin</button>
+</nav>
+<main id="main"></main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<input type="file" id="fileIn" accept=".xlsx,.xls,.csv" hidden>
+<input type="file" id="jsonIn" accept=".json" hidden>
+
+<script>
+'use strict';
+/* =====================================================================
+   Configuration & defaults
+   ===================================================================== */
+const STORAGE_KEY = 'bioportfolio_v2';
+const VERSION = 3;
+const CRITERION_IDS = ['c1','c2','c3','c4','c5'];
+const ANCHORS = ['a1','a3','a5'];
+
+const DEFAULT_CRITERIA = [
+  {id:'c1',name:'Strategic fit',short:'Strategic',weight:25,
+   desc:'Alignment with franchise and platform strategy; leverage of existing capabilities (excludes financial value)',
+   a1:'Peripheral to strategy; no platform or capability leverage',
+   a3:'Supports a stated strategic priority; partial reuse of platforms/capabilities',
+   a5:'Core to franchise/platform strategy; builds or strongly leverages key capabilities'},
+  {id:'c2',name:'Clinical / patient impact',short:'Clinical',weight:30,
+   desc:'Clinical utility, unmet need, and effect on patient outcomes',
+   a1:'Minimal or indirect effect on patient care',
+   a3:'Meaningful gain in accuracy, workflow, or access for a defined population',
+   a5:'Addresses significant unmet need; changes clinical decisions or outcomes'},
+  {id:'c3',name:'Commercial value',short:'Commercial',weight:30,
+   desc:'Revenue, margin, cost savings, and market potential',
+   a1:'< $5M peak annual revenue or savings',
+   a3:'$5–25M peak annual revenue or savings',
+   a5:'> $25M peak annual revenue or savings'},
+  {id:'c4',name:'Urgency / time-criticality',short:'Urgency',weight:15,
+   desc:'Competitive window, customer or partner commitments, and regulatory deadlines',
+   a1:'No time pressure; can slip 12+ months without loss of value',
+   a3:'Delay erodes value; competitive or customer pressure within 12–18 months',
+   a5:'Hard window: competitor launch, partner commitment, or deadline within 12 months'},
+  {id:'c5',name:'Execution confidence',short:'Execution',weight:0,
+   desc:'Technical maturity, clarity of regulatory pathway, and resource availability',
+   a1:'Unproven technology, unclear regulatory path, or no resources identified',
+   a3:'Moderate technical/regulatory risk; resources partially secured',
+   a5:'Proven technology, clear regulatory pathway, resources committed'}
+];
+const DEFAULT_TYPES = ['Functional Initiative','Sustaining','New Product Development'];
+const DEFAULT_SETTINGS = {yAxis:'c5',excludeY:true,high:75,medium:50,types:DEFAULT_TYPES};
+// Extra column headers accepted on Excel import (current names/short labels are always accepted)
+const IMPORT_ALIASES = {
+  c1:['strategic','strategic fit','strategic / business value'],
+  c2:['clinical','clinical / patient impact','patient impact','patient'],
+  c3:['commercial','commercial value','financial','financial impact'],
+  c4:['urgency','urgency / time-criticality','time-criticality'],
+  c5:['execution','execution confidence','feasibility','feasibility / execution confidence']
+};
+const PRIORITY_COLOR = {High:'#1f7a52',Medium:'#c99a1e',Low:'#b04a4a',Mandatory:'#5a6a9a'};
+const TEXT_SORT_KEYS = ['name','type','owner'];
+
+/* =====================================================================
+   Utilities
+   ===================================================================== */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const clone = o => JSON.parse(JSON.stringify(o));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Math.random().toString(36).slice(2,10);
+const clampScore = v => { v = Math.round(Number(v)); return Number.isFinite(v) && v ? Math.min(5, Math.max(1, v)) : 3; };
+const truthy = v => v === true || /^(y|yes|true|1|x|mandatory)$/i.test(String(v ?? '').trim());
+const str = v => String(v ?? '').trim();
+const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+
+function toast(msg, ms = 2600){
+  const t = $('#toast'); t.textContent = msg; t.style.display = 'block';
+  clearTimeout(t._t); t._t = setTimeout(() => t.style.display = 'none', ms);
+}
+
+/* =====================================================================
+   State: load, validate, migrate, save
+   ===================================================================== */
+let migrated = false;
+
+function freshState(){
+  return {version:VERSION, criteria:clone(DEFAULT_CRITERIA), settings:clone(DEFAULT_SETTINGS), projects:[]};
+}
+
+function cleanProject(p){
+  const scores = {};
+  CRITERION_IDS.forEach(id => scores[id] = clampScore(p?.scores?.[id]));
+  return {
+    id: typeof p?.id === 'string' && /^[\w-]{1,40}$/.test(p.id) ? p.id : uid(),
+    name: str(p?.name) || 'Untitled project',
+    type: str(p?.type), owner: str(p?.owner), desc: str(p?.desc), notes: str(p?.notes),
+    mandatory: !!p?.mandatory, scores
+  };
+}
+
+/** Validates any stored or restored data and upgrades older versions. */
+function normalize(d){
+  const out = freshState();
+  out.settings = {...out.settings, ...(d.settings || {})};
+  out.settings.excludeY = out.settings.excludeY !== false;
+  if (!CRITERION_IDS.includes(out.settings.yAxis)) out.settings.yAxis = 'c5';
+  if (!Array.isArray(out.settings.types) || !out.settings.types.length) out.settings.types = clone(DEFAULT_TYPES);
+
+  const validCriteria = Array.isArray(d.criteria) && CRITERION_IDS.every(id => d.criteria.some(c => c?.id === id));
+  if ((d.version || 1) >= VERSION && validCriteria){
+    out.criteria = CRITERION_IDS.map(id => {
+      const c = d.criteria.find(x => x.id === id), def = DEFAULT_CRITERIA.find(x => x.id === id);
+      const o = {id, name: str(c.name) || def.name, short: str(c.short), desc: str(c.desc), weight: Math.max(0, Number(c.weight) || 0)};
+      ANCHORS.forEach(a => o[a] = str(c[a]));
+      return o;
+    });
+  } else if (Array.isArray(d.projects) && d.projects.length){
+    // Upgrade from the original five criteria: scores carry over by position
+    out.settings.types = clone(DEFAULT_TYPES); out.settings.yAxis = 'c5'; out.settings.excludeY = true;
+    migrated = true;
+  }
+  out.projects = (Array.isArray(d.projects) ? d.projects : []).map(cleanProject);
+  // guarantee unique ids
+  const seen = new Set();
+  out.projects.forEach(p => { while (seen.has(p.id)) p.id = uid(); seen.add(p.id); });
+  return out;
+}
+
+function load(){
+  let raw = null;
+  try { raw = localStorage.getItem(STORAGE_KEY); } catch(e){ return freshState(); }
+  if (!raw) return freshState();
+  try {
+    const n = normalize(JSON.parse(raw));
+    persist(n);
+    return n;
+  } catch(e){
+    // Never silently overwrite unreadable data: park it under a recovery key
+    try { localStorage.setItem(STORAGE_KEY + '_unreadable_' + Date.now(), raw); } catch(_){}
+    setTimeout(() => toast('Saved data could not be read; a copy was kept and a fresh portfolio started.', 6000));
+    return freshState();
+  }
+}
+function persist(state){ try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e){} }
+function save(){ persist(S); }
+
+let S = load();
+const ui = {view:'portfolio', sort:{key:'score',dir:-1}, typeFilter:'All', editingId:null};
+
+/* =====================================================================
+   Scoring
+   ===================================================================== */
+const yCriterion = () => S.criteria.find(c => c.id === S.settings.yAxis) || S.criteria[4];
+const valueCriteria = () => S.settings.excludeY ? S.criteria.filter(c => c.id !== yCriterion().id) : S.criteria;
+const isValueCriterion = c => valueCriteria().includes(c);
+const label = c => c.short || c.name;
+const weightTotal = () => valueCriteria().reduce((a, c) => a + c.weight, 0);
+
+/** Weighted average of value criteria on a 1–5 scale, expressed as 20–100. */
+function score(p){
+  const tw = weightTotal();
+  if (!tw) return 0;
+  return valueCriteria().reduce((a, c) => a + c.weight * p.scores[c.id], 0) / tw / 5 * 100;
+}
+const priority = sc => sc >= S.settings.high ? 'High' : sc >= S.settings.medium ? 'Medium' : 'Low';
+const status = (p, sc) => p.mandatory ? 'Mandatory' : priority(sc);
+
+/** Overall rank of non-mandatory projects: value score, then Y-axis criterion, then name. */
+function ranking(){
+  const y = yCriterion().id;
+  const ranked = S.projects.filter(p => !p.mandatory).map(p => ({p, sc:score(p)}))
+    .sort((a, b) => b.sc - a.sc || b.p.scores[y] - a.p.scores[y] || a.p.name.localeCompare(b.p.name));
+  return new Map(ranked.map((r, i) => [r.p.id, i + 1]));
+}
+const visibleProjects = () => S.projects.filter(p => ui.typeFilter === 'All' || p.type === ui.typeFilter);
+
+/* =====================================================================
+   Routing & global event delegation
+   ===================================================================== */
+function go(view){
+  ui.view = view;
+  if (view !== 'add') ui.editingId = null;
+  $$('#nav button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.v === view)));
+  render();
+  window.scrollTo(0, 0);
+}
+function render(){ ({portfolio:renderPortfolio, matrix:renderMatrix, add:renderForm, admin:renderAdmin})[ui.view](); }
+
+$('#nav').addEventListener('click', e => { const b = e.target.closest('button'); if (b) go(b.dataset.v); });
+
+const ACTIONS = {
+  add:      () => go('add'),
+  edit:     id => { ui.editingId = id; go('add'); },
+  del:      id => deleteProject(id),
+  import:   () => $('#fileIn').click(),
+  template: () => downloadTemplate(),
+  export:   () => exportExcel(),
+  demo:     () => loadDemo(),
+  clear:    () => clearAll(),
+  backup:   () => exportJSON(),
+  restore:  () => $('#jsonIn').click(),
+};
+$('#main').addEventListener('click', e => {
+  const a = e.target.closest('[data-act]');
+  if (a){ ACTIONS[a.dataset.act]?.(a.dataset.id); return; }
+  const th = e.target.closest('th[data-k]');
+  if (th) setSort(th.dataset.k);
+});
+$('#main').addEventListener('keydown', e => {
+  const th = e.target.closest('th[data-k]');
+  if (th && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); setSort(th.dataset.k); }
+});
+$('#main').addEventListener('change', e => {
+  if (e.target.id === 'typeFilter'){ ui.typeFilter = e.target.value; render(); }
+});
+
+function setSort(k){
+  ui.sort = {key:k, dir: ui.sort.key === k ? -ui.sort.dir : (TEXT_SORT_KEYS.includes(k) ? 1 : -1)};
+  renderPortfolio();
+  $(`th[data-k="${k}"]`)?.focus();
+}
+
+/* =====================================================================
+   Portfolio view
+   ===================================================================== */
+function typeFilterHTML(){
+  const types = [...new Set([...S.settings.types, ...S.projects.map(p => p.type).filter(Boolean)])];
+  if (!types.includes(ui.typeFilter) && ui.typeFilter !== 'All') ui.typeFilter = 'All';
+  return `<div class="filter"><label for="typeFilter">Project type</label><select id="typeFilter">
+    ${['All', ...types].map(t => `<option ${t === ui.typeFilter ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></div>`;
+}
+
+function tableHTML(rows, ranks, mandatory){
+  const {key, dir} = ui.sort;
+  const th = (k, text, title = '') =>
+    `<th data-k="${k}" tabindex="0" aria-sort="${key === k ? (dir > 0 ? 'ascending' : 'descending') : 'none'}"${title ? ` title="${esc(title)}"` : ''}>${text}${key === k ? (dir > 0 ? ' ▲' : ' ▼') : ''}</th>`;
+  const cols = S.criteria.length + (mandatory ? 6 : 7);
+  const body = rows.length ? rows.map(({p, sc}) => `<tr>
+      ${mandatory ? '' : `<td class="rank">${ranks.get(p.id)}</td>`}
+      <td><b>${esc(p.name)}</b>${p.notes ? `<span class="note" title="${esc(p.notes)}" aria-label="Scoring rationale">ⓘ</span>` : ''}${p.desc ? `<div class="hint">${esc(p.desc)}</div>` : ''}</td>
+      <td>${esc(p.type)}</td><td>${esc(p.owner)}</td>
+      ${S.criteria.map(c => `<td>${p.scores[c.id]}</td>`).join('')}
+      <td><b>${sc.toFixed(1)}</b></td>
+      <td><span class="pill p-${status(p, sc)}">${status(p, sc)}</span></td>
+      <td style="white-space:nowrap"><button class="btn sm" data-act="edit" data-id="${p.id}">Edit</button> <button class="btn sm danger" data-act="del" data-id="${p.id}">Delete</button></td>
+    </tr>`).join('')
+    : `<tr><td colspan="${cols}" class="empty">${mandatory ? 'No mandatory projects.' : S.projects.length ? 'No projects match this filter.' : 'No projects yet. Add one, import Excel, or load demo data.'}</td></tr>`;
+  return `<div class="card tablewrap"><table>
+    <thead><tr>
+      ${mandatory ? '' : th('score', '#', 'Overall rank by value score')}
+      ${th('name','Project')}${th('type','Type')}${th('owner','Owner')}
+      ${S.criteria.map(c => th(c.id, esc(label(c)) + (isValueCriterion(c) ? '' : ' ↕'),
+          `${c.name} — ${c.desc}${isValueCriterion(c) ? ` (${c.weight}%)` : ' (Y-axis, not in value score)'}`)).join('')}
+      ${th('score','Value score')}${th('priority','Priority')}<th><span class="hint" style="margin:0">Actions</span></th>
+    </tr></thead><tbody>${body}</tbody></table></div>`;
+}
+
+function sortRows(rows){
+  const {key, dir} = ui.sort;
+  const val = r => key === 'score' || key === 'priority' ? r.sc
+    : TEXT_SORT_KEYS.includes(key) ? r.p[key].toLowerCase() : r.p.scores[key];
+  return rows.sort((a, b) => { const x = val(a), y = val(b); return (x > y ? 1 : x < y ? -1 : 0) * dir || b.sc - a.sc; });
+}
+
+function renderPortfolio(){
+  const ranks = ranking();
+  const rows = sortRows(visibleProjects().map(p => ({p, sc:score(p)})));
+  const ranked = rows.filter(r => !r.p.mandatory), mand = rows.filter(r => r.p.mandatory);
+  const avg = ranked.length ? ranked.reduce((a, r) => a + r.sc, 0) / ranked.length : 0;
+  const high = ranked.filter(r => priority(r.sc) === 'High').length;
+  const tw = weightTotal();
+  const filtered = ui.typeFilter !== 'All';
+  $('#main').innerHTML = `
+  <h1>Portfolio overview</h1><p class="lead">Score projects against strategic criteria and compare portfolio priorities.</p>
+  <div class="stats">
+    <div class="card stat"><div class="lbl">Projects${filtered ? ' (filtered)' : ''}</div><div class="val">${rows.length}</div></div>
+    <div class="card stat"><div class="lbl">Average value score</div><div class="val">${avg.toFixed(1)}</div></div>
+    <div class="card stat"><div class="lbl">High priority</div><div class="val">${high}</div></div>
+    <div class="card stat"><div class="lbl">Mandatory</div><div class="val">${mand.length}</div></div>
+    <div class="card stat"><div class="lbl">Value weight total</div><div class="val ${tw === 100 ? '' : 'warn'}">${tw}%</div></div>
+  </div>
+  <div class="btns">
+    <button class="btn primary" data-act="add">+ Add project</button>
+    <button class="btn" data-act="import">Import Excel</button>
+    <button class="btn" data-act="template">Download Excel template</button>
+    <button class="btn" data-act="export">Export to Excel</button>
+    <button class="btn" data-act="demo">Load demo data</button>
+    ${S.projects.length ? '<button class="btn danger" data-act="clear">Clear all</button>' : ''}
+    ${typeFilterHTML()}
+  </div>
+  <h2>Ranked portfolio</h2>
+  <p class="hint" style="font-size:14px;margin:-6px 0 12px"># is the overall rank across all types (ties broken by ${esc(yCriterion().name)}). Hover ⓘ for scoring rationale.</p>
+  ${tableHTML(ranked, ranks, false)}
+  <div class="section"><h2>Mandatory / compliance-required <span class="badge">Not ranked</span></h2>
+  <p class="hint" style="font-size:14px;margin:-6px 0 12px">Committed regardless of score (e.g., regulatory obligations, CAPAs). Scores are shown for reference only.</p>
+  ${tableHTML(mand, ranks, true)}</div>`;
+}
+
+function deleteProject(id){
+  const p = S.projects.find(x => x.id === id);
+  if (p && confirm(`Delete "${p.name}"?`)){ S.projects = S.projects.filter(x => x.id !== id); save(); render(); toast('Project deleted'); }
+}
+function clearAll(){
+  if (confirm('Remove all projects from the portfolio? Export a backup first if you may need them.')){ S.projects = []; save(); render(); }
+}
+
+/* =====================================================================
+   Prioritization matrix
+   ===================================================================== */
+/** Places points and decides label side/stacking so nearby labels don't overlap. */
+function layoutPoints(projects, yc){
+  const placed = [], dupes = {};
+  projects.map(p => ({p, sc:score(p), y:p.scores[yc.id]})).sort((a, b) => a.sc - b.sc).forEach(({p, sc, y}) => {
+    const xp = (sc - 20) / 80 * 100, yp = (5 - y) / 4 * 100, k = Math.round(xp) + '_' + yp;
+    dupes[k] = (dupes[k] || 0) + 1;
+    const x = Math.min(100, xp + (dupes[k] - 1) * 1.2);       // nudge identical points apart
+    const me = {p, sc, x, yp, lvl:0, left:x > 82};             // labels near the right edge go left
+    const near = q => q.yp === yp && !q.left && Math.abs(q.x - x) < 22;
+    const prev = placed.filter(q => near(q) && q.lvl === 0 && q.x <= x).pop();
+    if (prev && !placed.some(q => q !== prev && q.yp === yp && q.x < prev.x && prev.x - q.x < 22)) prev.left = true;
+    else while (placed.some(q => near(q) && q.lvl === me.lvl)) me.lvl++;
+    placed.push(me);
+  });
+  return placed;
+}
+
+function renderMatrix(){
+  const yc = yCriterion(), yl = esc(label(yc)).toLowerCase();
+  $('#main').innerHTML = `
+  <h1>Prioritization matrix</h1>
+  <p class="lead">X-axis = value score (${valueCriteria().map(c => esc(label(c))).join(', ')}). Y-axis = ${esc(yc.name)}${S.settings.excludeY ? ', scored separately' : ''}.</p>
+  <div class="btns" style="margin-bottom:16px">${typeFilterHTML()}</div>
+  <div class="card"><div id="matrix"><div class="plot" id="plot"></div><div class="tip" id="tip"></div></div>
+  <div class="legend">${['High','Medium','Low'].map(k => `<span><i style="background:${PRIORITY_COLOR[k]}"></i>${k}${k === 'High' ? ' priority' : ''}</span>`).join('')}
+    <span><i class="mand" style="background:${PRIORITY_COLOR.Mandatory}"></i>Mandatory (not ranked)</span></div>
+  <p class="hint">Click a point to edit the project. Change the Y-axis criterion on the Admin tab.</p></div>`;
+  const plot = $('#plot'), box = $('#matrix'), tip = $('#tip');
+  plot.innerHTML = `<div class="vmid"></div><div class="hmid"></div>
+    <div class="q" style="left:10px;top:10px">Lower value / high ${yl}</div>
+    <div class="q" style="right:10px;top:10px">High value / high ${yl}</div>
+    <div class="q" style="left:10px;bottom:10px">Lower value / lower ${yl}</div>
+    <div class="q" style="right:10px;bottom:10px">High value / lower ${yl}</div>
+    ${[1,2,3,4,5].map(v => `<div class="ytick" style="left:-22px;top:${(5 - v) / 4 * 100}%;transform:translateY(-50%)">${v}</div>`).join('')}
+    ${[20,40,60,80,100].map(v => `<div class="xtick" style="left:${(v - 20) / 80 * 100}%;bottom:-22px;transform:translateX(-50%)">${v}</div>`).join('')}
+    ${layoutPoints(visibleProjects(), yc).map(({p, sc, x, yp, lvl, left}) =>
+      `<button class="dot${p.mandatory ? ' mand' : ''}" data-act="edit" data-id="${p.id}" aria-label="${esc(p.name)}: value ${sc.toFixed(1)}, ${esc(label(yc))} ${p.scores[yc.id]}"
+        style="left:${x}%;top:${yp}%;background:${PRIORITY_COLOR[status(p, sc)]}"></button>
+       <div class="dlbl${left ? ' left' : ''}" style="left:${x}%;top:calc(${yp}% + ${lvl * 17}px)">${esc(p.name)}</div>`).join('')}`;
+  box.insertAdjacentHTML('beforeend', `<div class="axl" style="left:50%;bottom:8px;transform:translateX(-50%)">Portfolio value (value score) →</div>
+    <div class="axl" style="left:24px;top:50%;transform:translate(-50%,-50%) rotate(-90deg);white-space:nowrap">${esc(yc.name)} →</div>`);
+
+  const show = d => {
+    const p = S.projects.find(x => x.id === d.dataset.id), sc = score(p);
+    tip.innerHTML = `<b>${esc(p.name)}</b> · ${esc(p.type)}<br>Value score ${sc.toFixed(1)} (${status(p, sc)})<br>
+      ${S.criteria.map(c => `${esc(label(c))}: ${p.scores[c.id]}`).join(' · ')}${p.notes ? `<br><i>${esc(p.notes)}</i>` : ''}`;
+    const r = d.getBoundingClientRect(), b = box.getBoundingClientRect();
+    let l = r.left - b.left + 16; if (l + 300 > b.width) l = r.left - b.left - 300;
+    Object.assign(tip.style, {display:'block', left:l + 'px', top:(r.top - b.top + 14) + 'px'});
+  };
+  plot.querySelectorAll('.dot').forEach(d => {
+    d.addEventListener('mouseenter', () => show(d)); d.addEventListener('focus', () => show(d));
+    d.addEventListener('mouseleave', () => tip.style.display = 'none'); d.addEventListener('blur', () => tip.style.display = 'none');
+  });
+}
+
+/* =====================================================================
+   Add / edit project
+   ===================================================================== */
+function renderForm(){
+  const p = ui.editingId ? S.projects.find(x => x.id === ui.editingId) : null;
+  const types = [...S.settings.types]; if (p?.type && !types.includes(p.type)) types.push(p.type);
+  const option = (c, n, cur) => `<option value="${n}" ${cur === n ? 'selected' : ''}>${n}${c['a' + n] ? ' — ' + esc(c['a' + n]) : ''}</option>`;
+  $('#main').innerHTML = `
+  <h1>${p ? 'Edit project' : 'Add project'}</h1><p class="lead">Score each criterion 1–5 using the definitions. The value score is calculated from the current Admin settings.</p>
+  <div class="card"><form id="pf"><div class="grid2">
+    <div><label for="f-name">Project name</label><input id="f-name" name="name" required maxlength="120" value="${esc(p?.name)}"></div>
+    <div><label for="f-type">Project type</label><select id="f-type" name="type">${types.map(t => `<option ${p?.type === t ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></div>
+    <div><label for="f-owner">Owner</label><input id="f-owner" name="owner" value="${esc(p?.owner)}"></div>
+    <div><label for="f-desc">Description</label><input id="f-desc" name="desc" value="${esc(p?.desc)}"></div>
+    <div style="grid-column:1/-1"><label class="chk"><input type="checkbox" name="mandatory" ${p?.mandatory ? 'checked' : ''}> Mandatory / compliance-required</label>
+      <div class="hint">Committed regardless of score (e.g., regulatory obligation, CAPA). Shown separately and not ranked.</div></div>
+    ${S.criteria.map(c => `<div><label for="f-${c.id}">${esc(c.name)}${isValueCriterion(c) ? ` <span class="hint">· ${c.weight}%</span>` : ' <span class="badge">Y-axis</span>'}</label>
+      ${c.desc ? `<div class="crit-desc">${esc(c.desc)}</div>` : ''}
+      <select id="f-${c.id}" name="${c.id}">${[1,2,3,4,5].map(n => option(c, n, p ? p.scores[c.id] : 3)).join('')}</select></div>`).join('')}
+    <div style="grid-column:1/-1"><label for="f-notes">Scoring rationale <span class="hint">(optional — the evidence behind the scores, for governance review)</span></label>
+      <textarea id="f-notes" name="notes" rows="2">${esc(p?.notes)}</textarea></div>
+  </div>
+  <div class="card" style="margin-top:18px;background:var(--bg);display:flex;gap:30px;align-items:center">
+    <div><div class="hint">Live value score</div><div id="live" style="font-size:28px;font-weight:700"></div></div><div id="livep"></div></div>
+  <div class="btns" style="margin-top:20px">
+    <button class="btn primary" type="submit">${p ? 'Save changes' : 'Add to portfolio'}</button>
+    <button class="btn" type="button" id="clr">${p ? 'Cancel' : 'Clear'}</button>
+  </div></form></div>`;
+  const f = $('#pf');
+  const readScores = () => Object.fromEntries(S.criteria.map(c => [c.id, clampScore(f[c.id].value)]));
+  const live = () => {
+    const draft = {mandatory:f.mandatory.checked, scores:readScores()}, sc = score(draft), st = status(draft, sc);
+    $('#live').textContent = sc.toFixed(1); $('#livep').innerHTML = `<span class="pill p-${st}">${st}</span>`;
+  };
+  f.addEventListener('change', live); live();
+  $('#clr').onclick = () => { if (p) go('portfolio'); else { f.reset(); live(); } };
+  f.onsubmit = e => {
+    e.preventDefault();
+    const d = {name:str(f.name.value), type:f.type.value, owner:str(f.owner.value), desc:str(f.desc.value),
+               notes:str(f.notes.value), mandatory:f.mandatory.checked, scores:readScores()};
+    if (!d.name) return;
+    if (p){ Object.assign(p, d); toast('Project updated'); }
+    else { S.projects.push({id:uid(), ...d}); toast(`"${d.name}" added`); }
+    save(); go('portfolio');
+  };
+}
+
+/* =====================================================================
+   Admin
+   ===================================================================== */
+function renderAdmin(){
+  const yc = yCriterion();
+  $('#main').innerHTML = `
+  <h1>Portfolio administration</h1><p class="lead">Customize the names, descriptions, scoring definitions, and weights of the five criteria. Value weights are normalized to 100% when calculating scores.</p>
+  <div class="card"><form id="af">
+    <h2>Scoring model</h2>
+    <div class="row" style="margin-bottom:18px">
+      <div><label for="a-y">Y-axis criterion (matrix)</label><select id="a-y" name="yAxis">${S.criteria.map(c => `<option value="${c.id}" ${c === yc ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></div>
+      <div style="flex:2"><label class="chk"><input type="checkbox" name="excludeY" ${S.settings.excludeY ? 'checked' : ''}> Exclude the Y-axis criterion from the value score</label>
+        <div class="hint">Recommended. Prevents double-counting the Y-axis criterion on both matrix axes.</div></div>
+    </div>
+    <h2>Criteria</h2>
+    ${S.criteria.map((c, i) => `<div class="crit">
+      <div class="top">
+        <div class="num">${i + 1}</div>
+        <div><label>Criterion name</label><input name="name_${c.id}" value="${esc(c.name)}" required maxlength="60"></div>
+        <div><label>Short label</label><input name="short_${c.id}" value="${esc(c.short)}" maxlength="20" placeholder="Column header"></div>
+        <div><label>Description / purpose</label><textarea rows="1" name="desc_${c.id}">${esc(c.desc)}</textarea></div>
+        <div><label>Weight % <span class="ytag" data-id="${c.id}"></span></label><input type="number" min="0" max="100" step="1" name="w_${c.id}" value="${c.weight}"></div>
+      </div>
+      <div class="anch"><div></div>
+        ${ANCHORS.map(a => `<div><label>Score ${a.slice(1)} means…</label><textarea rows="2" name="${a}_${c.id}">${esc(c[a])}</textarea></div>`).join('')}
+      </div>
+    </div>`).join('')}
+    <div class="totalbar">Value weight total: <span id="wt"></span></div>
+    <div class="btns" style="margin-top:12px;margin-bottom:0">
+      <button class="btn primary" type="submit">Save criteria</button>
+      <button class="btn" type="button" id="rst">Reset to defaults</button>
+    </div>
+    <div class="callout">Recommended governance practice: document the rationale for each weight and scoring definition, calibrate the definitions (e.g., Commercial value revenue bands) to your business, and approve changes through the portfolio governance process. Renaming a criterion keeps existing project scores attached to it.</div>
+  </form></div>
+
+  <div class="card section"><h2>Priority thresholds & project types</h2>
+    <form id="sf"><div class="row">
+      <div><label for="s-high">High priority if value score ≥</label><input id="s-high" type="number" name="high" min="20" max="100" value="${S.settings.high}"></div>
+      <div><label for="s-med">Medium priority if value score ≥</label><input id="s-med" type="number" name="medium" min="20" max="100" value="${S.settings.medium}"></div>
+      <div style="flex:2"><label for="s-types">Project types (comma-separated)</label><input id="s-types" name="types" value="${esc(S.settings.types.join(', '))}"></div>
+      <div style="flex:0"><button class="btn primary" type="submit">Save</button></div>
+    </div><div class="hint" style="margin-top:8px">Value scores range from 20 (all 1s) to 100 (all 5s); all 3s = 60. Below the medium threshold is Low. Mandatory projects are not assigned a priority.</div></form>
+  </div>
+
+  <div class="card section"><h2>Excel import format</h2>
+    <p class="hint" style="font-size:14px">Columns recognized: <b>Project Name, Type, Owner, Description, Mandatory</b> (Yes/No), <b>Rationale</b>, plus one column per criterion matched by its current name or short label: ${S.criteria.map(c => `<b>${esc(label(c))}</b>`).join(', ')}. Scores should be 1–5; blanks default to 3. Download the template from the Portfolio tab to get the exact headers and a criteria guide.</p>
+  </div>
+
+  <div class="card section"><h2>Backup & restore</h2>
+    <p class="hint" style="font-size:14px">Data is saved in this browser only. Export a JSON backup regularly, and to move your portfolio and configuration to another computer or share it.</p>
+    <div class="btns" style="margin:0"><button class="btn" data-act="backup">Export backup (.json)</button><button class="btn" data-act="restore">Restore from backup</button></div>
+  </div>`;
+
+  const f = $('#af');
+  const excluded = id => f.excludeY.checked && id === f.yAxis.value;
+  const formWeightTotal = () => S.criteria.filter(c => !excluded(c.id)).reduce((a, c) => a + Math.max(0, Number(f['w_' + c.id].value) || 0), 0);
+  const refresh = () => {
+    S.criteria.forEach(c => {
+      f['w_' + c.id].disabled = excluded(c.id);
+      $(`.ytag[data-id="${c.id}"]`).innerHTML = c.id === f.yAxis.value ? '<span class="badge">Y</span>' : '';
+    });
+    const t = formWeightTotal();
+    $('#wt').innerHTML = `<span class="${t === 100 ? 'ok' : 'warn'}">${t}%</span>${t === 100 ? '' : ' <span class="hint">(will be normalized)</span>'}`;
+  };
+  f.addEventListener('input', refresh); f.addEventListener('change', refresh); refresh();
+  f.onsubmit = e => {
+    e.preventDefault();
+    if (!formWeightTotal()){ alert('At least one value criterion must have a weight greater than 0.'); return; }
+    S.settings.yAxis = f.yAxis.value; S.settings.excludeY = f.excludeY.checked;
+    S.criteria.forEach(c => {
+      c.name = str(f['name_' + c.id].value) || c.name;
+      c.short = str(f['short_' + c.id].value);
+      c.desc = str(f['desc_' + c.id].value);
+      ANCHORS.forEach(a => c[a] = str(f[a + '_' + c.id].value));
+      c.weight = Math.max(0, Number(f['w_' + c.id].value) || 0);
+    });
+    save(); toast('Criteria saved'); renderAdmin();
+  };
+  $('#rst').onclick = () => {
+    if (!confirm('Reset criteria, scoring definitions, weights, and Y-axis to defaults? Project scores are kept.')) return;
+    S.criteria = clone(DEFAULT_CRITERIA); S.settings.yAxis = 'c5'; S.settings.excludeY = true;
+    save(); renderAdmin(); toast('Criteria reset');
+  };
+  const sf = $('#sf');
+  sf.onsubmit = e => {
+    e.preventDefault();
+    const high = Number(sf.high.value), medium = Number(sf.medium.value);
+    if (!(medium <= high)){ alert('Medium threshold must be ≤ High threshold.'); return; }
+    const types = [...new Set(sf.types.value.split(',').map(str).filter(Boolean))];
+    Object.assign(S.settings, {high, medium}, types.length ? {types} : {});
+    save(); toast('Settings saved');
+  };
+}
+
+/* =====================================================================
+   Excel import / export
+   ===================================================================== */
+const baseHeaders = () => ['Project Name','Type','Owner','Description','Mandatory', ...S.criteria.map(label)];
+function xlsxReady(){
+  if (typeof XLSX !== 'undefined') return true;
+  alert('The Excel library could not load (no internet connection?). CSV import still works.');
+  return false;
+}
+function downloadTemplate(){
+  if (!xlsxReady()) return;
+  const projects = XLSX.utils.aoa_to_sheet([[...baseHeaders(), 'Rationale'],
+    ['Example project', S.settings.types[0], 'Jane Doe', 'Short description', 'No', ...S.criteria.map(() => 3), 'Evidence behind the scores']]);
+  const guide = XLSX.utils.aoa_to_sheet([['Column','Criterion','Description','Weight %','Score 1','Score 3','Score 5'],
+    ...S.criteria.map(c => [label(c), c.name, c.desc, isValueCriterion(c) ? c.weight : 'Y-axis (not in value score)', c.a1, c.a3, c.a5]),
+    [], ['Mandatory','Yes = compliance-required; committed regardless of score and not ranked']]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, projects, 'Projects'); XLSX.utils.book_append_sheet(wb, guide, 'Criteria guide');
+  XLSX.writeFile(wb, 'BioPortfolio_template.xlsx');
+}
+function exportExcel(){
+  if (!xlsxReady()) return;
+  const ranks = ranking();
+  const rows = S.projects.map(p => ({p, sc:score(p)}))
+    .sort((a, b) => (ranks.get(a.p.id) ?? 1e9) - (ranks.get(b.p.id) ?? 1e9) || b.sc - a.sc)
+    .map(({p, sc}) => [ranks.get(p.id) ?? '', p.name, p.type, p.owner, p.desc, p.mandatory ? 'Yes' : 'No',
+      ...S.criteria.map(c => p.scores[c.id]), Number(sc.toFixed(1)), status(p, sc), p.notes]);
+  const ws = XLSX.utils.aoa_to_sheet([['Rank', ...baseHeaders(), 'Value Score', 'Priority', 'Rationale'], ...rows]);
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Portfolio');
+  XLSX.writeFile(wb, `BioPortfolio_export_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+function parseCSV(text){
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  const split = l => l.match(/("([^"]|"")*"|[^,]*)(,|$)/g).slice(0, -1)
+    .map(x => x.replace(/,$/, '').replace(/^"|"$/g, '').replace(/""/g, '"'));
+  const head = split(lines[0] || '');
+  return lines.slice(1).map(l => { const v = split(l); return Object.fromEntries(head.map((k, i) => [k, v[i] ?? ''])); });
+}
+async function readRows(file){
+  if (/\.csv$/i.test(file.name) && typeof XLSX === 'undefined') return parseCSV(await file.text());
+  if (!xlsxReady()) return null;
+  const wb = XLSX.read(await file.arrayBuffer());
+  return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {defval:''});
+}
+$('#fileIn').onchange = async e => {
+  const file = e.target.files[0]; e.target.value = '';
+  if (!file) return;
+  try {
+    const rows = await readRows(file); if (!rows) return;
+    const norm = s => String(s).trim().toLowerCase();
+    let added = 0, defaulted = 0;
+    rows.forEach(r => {
+      const m = {}; Object.keys(r).forEach(k => m[norm(k)] = r[k]);
+      const name = str(m['project name'] || m['project'] || m['name']);
+      if (!name) return;
+      const scores = {};
+      S.criteria.forEach(c => {
+        const k = [norm(c.name), norm(c.short), ...(IMPORT_ALIASES[c.id] || [])].find(k => k && str(m[k]) !== '' && m[k] !== undefined);
+        if (!k) defaulted++;
+        scores[c.id] = clampScore(k ? m[k] : 3);
+      });
+      S.projects.push(cleanProject({id:uid(), name, type:str(m['type'] || m['project type']) || S.settings.types[0],
+        owner:m['owner'], desc:m['description'], notes:m['rationale'] || m['notes'], mandatory:truthy(m['mandatory']), scores}));
+      added++;
+    });
+    save(); render();
+    toast(`Imported ${plural(added, 'project')}` + (defaulted ? ` — ${plural(defaulted, 'missing score')} set to 3` : ''), defaulted ? 5000 : 2600);
+  } catch(err){ alert('Could not read that file: ' + err.message); }
+};
+
+/* =====================================================================
+   Backup & restore
+   ===================================================================== */
+function exportJSON(){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(S, null, 2)], {type:'application/json'}));
+  a.download = `BioPortfolio_backup_${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+$('#jsonIn').onchange = async e => {
+  const file = e.target.files[0]; e.target.value = '';
+  if (!file) return;
+  try {
+    const d = JSON.parse(await file.text());
+    if (!d || !Array.isArray(d.projects) || !d.criteria) throw new Error('This is not a BioPortfolio backup file.');
+    if (!confirm('Replace the current portfolio and configuration with this backup?')) return;
+    S = normalize(d); save(); render(); toast('Backup restored');
+  } catch(err){ alert(err.message); }
+};
+
+/* =====================================================================
+   Demo data
+   ===================================================================== */
+function loadDemo(){
+  if (S.projects.length && !confirm('Add the demo projects to your existing portfolio?')) return;
+  // scores: Strategic, Clinical, Commercial, Urgency, Execution
+  const demo = [
+    ['Next-gen sepsis panel','New Product Development','A. Chen','Rapid multiplex host-response assay',[5,5,4,4,3],false],
+    ['Analyzer software v4 update','Sustaining','R. Patel','Cybersecurity and usability release',[3,2,3,4,5],false],
+    ['Companion Dx – HER2-low','New Product Development','M. Alvarez','CDx partnership with pharma',[5,4,5,5,2],false],
+    ['Reagent cost-down','Sustaining','J. Kim','Supplier consolidation for core reagents',[2,1,4,2,5],false],
+    ['IVDR transition – legacy assays','Sustaining','S. Novak','EU IVDR re-certification',[3,3,3,5,4],true],
+    ['Point-of-care platform','New Product Development','L. Okafor','Decentralized testing platform',[5,4,4,2,1],false],
+    ['PMO stage-gate redesign','Functional Initiative','D. Russo','Standardize gate criteria and governance cadence',[4,1,2,3,4],false],
+    ['QMS e-signature rollout','Functional Initiative','T. Brooks','Part 11-compliant electronic records',[3,1,2,3,4],false]];
+  demo.forEach(([name, type, owner, desc, s, mandatory]) =>
+    S.projects.push(cleanProject({name, type, owner, desc, mandatory, scores:Object.fromEntries(CRITERION_IDS.map((id, i) => [id, s[i]]))})));
+  save(); render(); toast('Demo projects loaded');
+}
+
+/* ===================================================================== */
+render();
+if (migrated) toast('Updated to the new criteria set. Review scores for Urgency, which replaced Regulatory/compliance.', 6000);
+</script>
+</body>
+</html>
