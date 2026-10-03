@@ -2,7 +2,7 @@
 
 A single-file web app for scoring and prioritizing a biotech / diagnostics project portfolio.
 
-**Run it:** download `index.html` and open it in any modern browser. There's no install and no server.
+**Run it:** download `bioportfolio.html` and open it in any modern browser. There's no install and no server.
 
 ## Features
 
@@ -12,6 +12,7 @@ A single-file web app for scoring and prioritizing a biotech / diagnostics proje
 - **Admin**: rename the five criteria and edit their descriptions, 1/3/5 score definitions and weights. You can also set the Y-axis criterion, priority thresholds and project types.
 - **Excel**: download a template (with a criteria guide), import projects, and export the ranked portfolio.
 - **Backup**: export your portfolio and configuration to JSON and restore it later.
+- **Light and dark mode**: follows your system setting until you choose one with the toggle in the header.
 
 ## Default scoring model
 

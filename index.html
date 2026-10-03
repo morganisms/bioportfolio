@@ -5,14 +5,40 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BioPortfolio</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>/* apply a saved theme before first paint to avoid a flash */try{const t=localStorage.getItem('bioportfolio_theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
 <style>
 :root{
-  --navy:#17304b; --teal:#2a8c82; --teal-lt:#7fd1c4; --bg:#f2f6f7; --card:#fff;
-  --ink:#1c2b3a; --muted:#5d6b78; --line:#e1e7ec; --head:#eef2f5;
-  --hi:#1f7a52; --hi-bg:#e3f4ea; --md:#8a6a12; --md-bg:#fbf1d6; --lo:#9a3b3b; --lo-bg:#f8e3e3;
-  --mand:#3b4a7a; --mand-bg:#e6e9f2;
+  --navy:#17304b;--teal:#2a8c82;--teal-lt:#7fd1c4;
+  --bg:#f2f6f7;--surface:#ffffff;--ink:#1c2b3a;--muted:#5d6b78;--line:#e1e7ec;--head:#eef2f5;--head-ink:#3b4a58;
+  --btn-hover:#b9c5cf;--callout:#e9f3f1;--callout-ink:#2d4a47;--focus:#7fd1c4;--disabled:#f1f3f5;--disabled-ink:#9aa5af;
+  --axis:#8695a3;--axis-ink:#4a5866;--quad:#7a8794;--badge:#e3f2ef;--teal-ink:#2a8c82;
+  --hi:#1f7a52;--hi-bg:#e3f4ea;--md:#8a6a12;--md-bg:#fbf1d6;--lo:#9a3b3b;--lo-bg:#f8e3e3;--mand:#3b4a7a;--mand-bg:#e6e9f2;
+  --dot-hi:#1f7a52;--dot-md:#c99a1e;--dot-lo:#b04a4a;--dot-mand:#5a6a9a;
+  --tip:#17304b;--tip-line:transparent;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --navy:#10233a;--bg:#111a23;--surface:#18232e;--ink:#e3e9ee;--muted:#9aa8b5;--line:#2a3743;--head:#1f2c38;--head-ink:#b5c2ce;
+    --btn-hover:#3c4c5b;--callout:#16302d;--callout-ink:#bfe3dc;--disabled:#1f2a35;--disabled-ink:#6b7a87;
+    --axis:#6b7a87;--axis-ink:#b5c2ce;--quad:#8796a3;--badge:#173a35;--teal-ink:#7fd1c4;
+    --hi:#9fdcb9;--hi-bg:#173a2a;--md:#f0d68f;--md-bg:#3e3315;--lo:#e58a8a;--lo-bg:#3d1f22;--mand:#b4bfe6;--mand-bg:#242d45;
+    --dot-hi:#3aa673;--dot-md:#d9ad3a;--dot-lo:#d06464;--dot-mand:#8090c4;
+    --tip:#0b1622;--tip-line:#3c4c5b;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+    --navy:#10233a;--bg:#111a23;--surface:#18232e;--ink:#e3e9ee;--muted:#9aa8b5;--line:#2a3743;--head:#1f2c38;--head-ink:#b5c2ce;
+    --btn-hover:#3c4c5b;--callout:#16302d;--callout-ink:#bfe3dc;--disabled:#1f2a35;--disabled-ink:#6b7a87;
+    --axis:#6b7a87;--axis-ink:#b5c2ce;--quad:#8796a3;--badge:#173a35;--teal-ink:#7fd1c4;
+    --hi:#9fdcb9;--hi-bg:#173a2a;--md:#f0d68f;--md-bg:#3e3315;--lo:#e58a8a;--lo-bg:#3d1f22;--mand:#b4bfe6;--mand-bg:#242d45;
+    --dot-hi:#3aa673;--dot-md:#d9ad3a;--dot-lo:#d06464;--dot-mand:#8090c4;
+    --tip:#0b1622;--tip-line:#3c4c5b;
+    color-scheme:dark;
 }
 *{box-sizing:border-box}
+html{background:var(--bg)}
 body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
 
 /* Header & nav */
@@ -21,7 +47,11 @@ header{background:var(--navy);color:#fff;padding:18px 20px;display:flex;justify-
 .sub{font-size:15px;opacity:.85;margin-top:2px}
 .tag{font-size:18px;color:#fff;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.4)}
 .tag:hover{color:var(--teal-lt);border-bottom-color:var(--teal-lt)}
-nav{background:#fff;border-bottom:1px solid var(--line);padding:0 20px;display:flex;gap:6px;overflow-x:auto}
+.headtools{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.themetoggle{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:7px 14px 7px 11px;font:600 14px/1.2 inherit;font-family:inherit;cursor:pointer}
+.themetoggle:hover{border-color:var(--teal-lt);color:var(--teal-lt)}
+.themetoggle svg{width:16px;height:16px;flex:none}
+nav{background:var(--surface);border-bottom:1px solid var(--line);padding:0 20px;display:flex;gap:6px;overflow-x:auto}
 nav button{background:none;border:0;padding:16px 22px;font:600 16px/1.2 inherit;font-family:inherit;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
 nav button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--teal)}
 
@@ -31,7 +61,7 @@ h1{font-size:34px;margin:0 0 8px}
 h2{font-size:22px;margin:0 0 14px}
 .lead{color:var(--muted);font-size:18px;margin:0 0 28px}
 .hint{font-weight:400;color:var(--muted);font-size:13px;margin-top:4px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:22px}
 .section{margin-top:22px}
 .row{display:flex;gap:14px;flex-wrap:wrap;align-items:end}
 .row>div{flex:1;min-width:180px}
@@ -45,16 +75,17 @@ h2{font-size:22px;margin:0 0 14px}
 
 /* Buttons & forms */
 .btns{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:24px}
-.btn{border:1px solid var(--line);background:#fff;color:var(--ink);padding:11px 16px;border-radius:7px;font:600 15px/1.2 inherit;font-family:inherit;cursor:pointer}
-.btn:hover{border-color:#b9c5cf}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:11px 16px;border-radius:7px;font:600 15px/1.2 inherit;font-family:inherit;cursor:pointer}
+.btn:hover{border-color:var(--btn-hover)}
+.btn.primary:hover{filter:brightness(1.15)}
 .btn.primary{background:var(--navy);color:#fff;border-color:var(--navy)}
 .btn.danger{color:var(--lo)}
 .btn.sm{padding:6px 10px;font-size:13px}
 label{display:block;font-size:14px;font-weight:600;margin-bottom:6px}
-input,select,textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:7px;font:15px/1.35 inherit;font-family:inherit;background:#fff;color:var(--ink)}
+input,select,textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:7px;font:15px/1.35 inherit;font-family:inherit;background:var(--surface);color:var(--ink)}
 textarea{resize:vertical;min-height:44px}
-input:focus,select:focus,textarea:focus,button:focus-visible,th:focus-visible{outline:2px solid var(--teal-lt);outline-offset:1px}
-input:disabled{background:#f1f3f5;color:#9aa5af}
+input:focus,select:focus,textarea:focus,button:focus-visible,th:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+input:disabled{background:var(--disabled);color:var(--disabled-ink)}
 .chk{display:flex;gap:8px;align-items:center;font-weight:600;font-size:15px}.chk input{width:auto;margin:0}
 .crit-desc{font-size:12.5px;color:var(--muted);font-weight:400;margin:2px 0 6px}
 .filter{display:flex;align-items:center;gap:8px;margin-left:auto}
@@ -63,32 +94,33 @@ input:disabled{background:#f1f3f5;color:#9aa5af}
 /* Tables */
 .tablewrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse}
-th{background:var(--head);text-align:left;font-size:13px;text-transform:uppercase;color:#3b4a58;padding:14px;white-space:nowrap}
+th{background:var(--head);text-align:left;font-size:13px;text-transform:uppercase;color:var(--head-ink);padding:14px;white-space:nowrap}
 th[data-k]{cursor:pointer;user-select:none}
 th:first-child{border-radius:8px 0 0 8px}th:last-child{border-radius:0 8px 8px 0}
 td{padding:14px;border-bottom:1px solid var(--line);font-size:15px;vertical-align:middle}
 tr:last-child td{border-bottom:0}
-td.rank{font-weight:700;color:var(--teal);width:56px}
+td.rank{font-weight:700;color:var(--teal-ink);width:56px}
 .empty{color:var(--muted);text-align:center;padding:30px}
 .pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:13px;font-weight:700}
 .p-High{background:var(--hi-bg);color:var(--hi)}.p-Medium{background:var(--md-bg);color:var(--md)}.p-Low{background:var(--lo-bg);color:var(--lo)}
 .p-Mandatory{background:var(--mand-bg);color:var(--mand)}
-.badge{font-size:11px;font-weight:700;color:var(--teal);background:#e3f2ef;padding:2px 8px;border-radius:10px;margin-left:6px;vertical-align:2px}
-.note{cursor:help;color:var(--teal);font-weight:700;margin-left:4px}
+.badge{font-size:11px;font-weight:700;color:var(--teal-ink);background:var(--badge);padding:2px 8px;border-radius:10px;margin-left:6px;vertical-align:2px}
+.note{cursor:help;color:var(--teal-ink);font-weight:700;margin-left:4px}
 
 /* Matrix */
 #matrix{position:relative;height:720px}
-.plot{position:absolute;left:110px;right:40px;top:30px;bottom:70px;border-left:2px solid #8695a3;border-bottom:2px solid #8695a3}
+.plot{position:absolute;left:110px;right:40px;top:30px;bottom:70px;border-left:2px solid var(--axis);border-bottom:2px solid var(--axis)}
 .vmid{position:absolute;top:0;bottom:0;left:50%;width:2px;background:var(--line)}
 .hmid{position:absolute;left:0;right:0;top:50%;height:2px;background:var(--line)}
-.q{position:absolute;font-size:13px;font-weight:600;color:#7a8794}
-.dot{position:absolute;width:18px;height:18px;margin:-9px 0 0 -9px;padding:0;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.25);cursor:pointer}
+.q{position:absolute;font-size:13px;font-weight:600;color:var(--quad)}
+.dot{position:absolute;width:18px;height:18px;margin:-9px 0 0 -9px;padding:0;border-radius:50%;border:2px solid var(--surface);box-shadow:0 1px 4px rgba(0,0,0,.25);cursor:pointer}
 .dot.mand{border-radius:3px;transform:rotate(45deg)}
-.dlbl{position:absolute;font-size:12px;font-weight:600;transform:translate(12px,-50%);white-space:nowrap;color:var(--ink);pointer-events:none;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff}
+.c-High{background:var(--dot-hi)}.c-Medium{background:var(--dot-md)}.c-Low{background:var(--dot-lo)}.c-Mandatory{background:var(--dot-mand)}
+.dlbl{position:absolute;font-size:12px;font-weight:600;transform:translate(12px,-50%);white-space:nowrap;color:var(--ink);pointer-events:none;text-shadow:0 0 3px var(--surface),0 0 3px var(--surface),0 0 3px var(--surface)}
 .dlbl.left{transform:translate(calc(-100% - 12px),-50%)}
-.tip{position:absolute;background:var(--navy);color:#fff;padding:10px 12px;border-radius:7px;font-size:13px;pointer-events:none;z-index:5;display:none;max-width:300px;line-height:1.45}
-.axl{position:absolute;font-size:14px;font-weight:700;color:#4a5866}
-.ytick,.xtick{position:absolute;font-size:12px;color:#8695a3}
+.tip{position:absolute;background:var(--tip);border:1px solid var(--tip-line);color:#fff;padding:10px 12px;border-radius:7px;font-size:13px;pointer-events:none;z-index:5;display:none;max-width:300px;line-height:1.45}
+.axl{position:absolute;font-size:14px;font-weight:700;color:var(--axis-ink)}
+.ytick,.xtick{position:absolute;font-size:12px;color:var(--quad)}
 .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:6px;font-size:13px;color:var(--muted)}
 .legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:-1px}
 .legend i.mand{border-radius:2px;transform:rotate(45deg)}
@@ -97,12 +129,12 @@ td.rank{font-weight:700;color:var(--teal);width:56px}
 .crit{border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px}
 .crit .top{display:grid;grid-template-columns:36px 1.3fr .7fr 2fr 110px;gap:10px;align-items:start}
 .crit .anch{display:grid;grid-template-columns:36px 1fr 1fr 1fr;gap:10px;margin-top:12px}
-.crit .num{font-weight:700;color:var(--teal);font-size:18px;padding-top:30px}
+.crit .num{font-weight:700;color:var(--teal-ink);font-size:18px;padding-top:30px}
 .crit label{font-size:12px;color:var(--muted);white-space:nowrap}
 .totalbar{display:flex;justify-content:flex-end;gap:10px;align-items:center;padding-top:10px;font-weight:600}
-.callout{background:#e9f3f1;border-left:4px solid var(--teal);padding:14px 18px;border-radius:6px;margin-top:18px;color:#2d4a47}
+.callout{background:var(--callout);border-left:4px solid var(--teal);padding:14px 18px;border-radius:6px;margin-top:18px;color:var(--callout-ink)}
 
-.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:12px 20px;border-radius:8px;font-size:15px;display:none;z-index:20;max-width:calc(100% - 32px)}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--tip);border:1px solid var(--tip-line);color:#fff;padding:12px 20px;border-radius:8px;font-size:15px;display:none;z-index:20;max-width:calc(100% - 32px)}
 
 @media (max-width:900px){
   main{padding:24px 16px 48px}
@@ -116,7 +148,10 @@ td.rank{font-weight:700;color:var(--teal);width:56px}
 <body>
 <header>
   <div><div class="brand">Bio<span>Portfolio</span></div><div class="sub">Biotech Portfolio Prioritization Tool</div></div>
-  <a class="tag" href="https://github.com/morganisms/bioportfolio" target="_blank" rel="noopener">morganisms: bioportfolio</a>
+  <div class="headtools">
+    <button type="button" class="themetoggle" id="theme-toggle"></button>
+    <a class="tag" href="https://github.com/morganisms/bioportfolio" target="_blank" rel="noopener noreferrer">morganisms: bioportfolio</a>
+  </div>
 </header>
 <nav id="nav" role="tablist">
   <button role="tab" data-v="portfolio" aria-selected="true">Portfolio</button>
@@ -135,6 +170,7 @@ td.rank{font-weight:700;color:var(--teal);width:56px}
    Configuration & defaults
    ===================================================================== */
 const STORAGE_KEY = 'bioportfolio_v2';
+const THEME_KEY = 'bioportfolio_theme';
 const VERSION = 3;
 const CRITERION_IDS = ['c1','c2','c3','c4','c5'];
 const ANCHORS = ['a1','a3','a5'];
@@ -176,7 +212,6 @@ const IMPORT_ALIASES = {
   c4:['urgency','urgency / time-criticality','time-criticality'],
   c5:['execution','execution confidence','feasibility','feasibility / execution confidence']
 };
-const PRIORITY_COLOR = {High:'#1f7a52',Medium:'#c99a1e',Low:'#b04a4a',Mandatory:'#5a6a9a'};
 const TEXT_SORT_KEYS = ['name','type','owner'];
 
 /* =====================================================================
@@ -450,8 +485,8 @@ function renderMatrix(){
   <p class="lead">X-axis = value score (${valueCriteria().map(c => esc(label(c))).join(', ')}). Y-axis = ${esc(yc.name)}${S.settings.excludeY ? ', scored separately' : ''}.</p>
   <div class="btns" style="margin-bottom:16px">${typeFilterHTML()}</div>
   <div class="card"><div id="matrix"><div class="plot" id="plot"></div><div class="tip" id="tip"></div></div>
-  <div class="legend">${['High','Medium','Low'].map(k => `<span><i style="background:${PRIORITY_COLOR[k]}"></i>${k}${k === 'High' ? ' priority' : ''}</span>`).join('')}
-    <span><i class="mand" style="background:${PRIORITY_COLOR.Mandatory}"></i>Mandatory (not ranked)</span></div>
+  <div class="legend">${['High','Medium','Low'].map(k => `<span><i class="c-${k}"></i>${k}${k === 'High' ? ' priority' : ''}</span>`).join('')}
+    <span><i class="mand c-Mandatory"></i>Mandatory (not ranked)</span></div>
   <p class="hint">Click a point to edit the project. Change the Y-axis criterion on the Admin tab.</p></div>`;
   const plot = $('#plot'), box = $('#matrix'), tip = $('#tip');
   plot.innerHTML = `<div class="vmid"></div><div class="hmid"></div>
@@ -462,8 +497,8 @@ function renderMatrix(){
     ${[1,2,3,4,5].map(v => `<div class="ytick" style="left:-22px;top:${(5 - v) / 4 * 100}%;transform:translateY(-50%)">${v}</div>`).join('')}
     ${[20,40,60,80,100].map(v => `<div class="xtick" style="left:${(v - 20) / 80 * 100}%;bottom:-22px;transform:translateX(-50%)">${v}</div>`).join('')}
     ${layoutPoints(visibleProjects(), yc).map(({p, sc, x, yp, lvl, left}) =>
-      `<button class="dot${p.mandatory ? ' mand' : ''}" data-act="edit" data-id="${p.id}" aria-label="${esc(p.name)}: value ${sc.toFixed(1)}, ${esc(label(yc))} ${p.scores[yc.id]}"
-        style="left:${x}%;top:${yp}%;background:${PRIORITY_COLOR[status(p, sc)]}"></button>
+      `<button class="dot c-${status(p, sc)}${p.mandatory ? ' mand' : ''}" data-act="edit" data-id="${p.id}" aria-label="${esc(p.name)}: value ${sc.toFixed(1)}, ${esc(label(yc))} ${p.scores[yc.id]}"
+        style="left:${x}%;top:${yp}%"></button>
        <div class="dlbl${left ? ' left' : ''}" style="left:${x}%;top:calc(${yp}% + ${lvl * 17}px)">${esc(p.name)}</div>`).join('')}`;
   box.insertAdjacentHTML('beforeend', `<div class="axl" style="left:50%;bottom:8px;transform:translateX(-50%)">Portfolio value (value score) →</div>
     <div class="axl" style="left:24px;top:50%;transform:translate(-50%,-50%) rotate(-90deg);white-space:nowrap">${esc(yc.name)} →</div>`);
@@ -732,6 +767,33 @@ function loadDemo(){
     S.projects.push(cleanProject({name, type, owner, desc, mandatory, scores:Object.fromEntries(CRITERION_IDS.map((id, i) => [id, s[i]]))})));
   save(); render(); toast('Demo projects loaded');
 }
+
+/* =====================================================================
+   Theme (light / dark) — same behavior as BioCapacity:
+   an explicit choice wins; without one the page follows the system setting.
+   ===================================================================== */
+const darkQuery = window.matchMedia?.('(prefers-color-scheme: dark)');
+function storedTheme(){
+  try { const t = localStorage.getItem(THEME_KEY); return t === 'light' || t === 'dark' ? t : null; } catch(e){ return null; }
+}
+const currentTheme = () => document.documentElement.dataset.theme || (darkQuery?.matches ? 'dark' : 'light');
+const ICON_SUN = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></g></svg>';
+const ICON_MOON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.6A8.5 8.5 0 0 1 9.4 3.5a8.5 8.5 0 1 0 11.1 11.1Z" fill="currentColor"/></svg>';
+function applyTheme(theme){
+  if (theme) document.documentElement.dataset.theme = theme;
+  else delete document.documentElement.dataset.theme;
+  const dark = currentTheme() === 'dark', btn = $('#theme-toggle');
+  btn.setAttribute('aria-label', `Switch to ${dark ? 'light' : 'dark'} mode`);
+  btn.innerHTML = `${dark ? ICON_SUN : ICON_MOON}<span>${dark ? 'Light mode' : 'Dark mode'}</span>`;
+}
+function toggleTheme(){
+  const next = currentTheme() === 'dark' ? 'light' : 'dark';
+  try { localStorage.setItem(THEME_KEY, next); } catch(e){}
+  applyTheme(next);
+}
+$('#theme-toggle').addEventListener('click', toggleTheme);
+darkQuery?.addEventListener?.('change', () => { if (!storedTheme()) applyTheme(null); });
+applyTheme(storedTheme());
 
 /* ===================================================================== */
 render();
